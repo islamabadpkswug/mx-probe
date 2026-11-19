@@ -1,0 +1,33 @@
+name: probe
+run-name: ${{ inputs.nonce }}
+on:
+  workflow_dispatch:
+    inputs:
+      nonce:
+        required: true
+      addrs:
+        required: true
+permissions:
+  contents: read
+jobs:
+  p:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -q dnspython requests
+      - run: python run.py
+        timeout-minutes: 25
+        env:
+          ADDRS: ${{ inputs.addrs }}
+          MXKEY: ${{ secrets.MXKEY }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: results.json
+          retention-days: 1
+          if-no-files-found: ignore
